@@ -26,6 +26,14 @@ export default function TravelGraphHome() {
   const [flexibility, setFlexibility] = useState(0.15);
   const [departureAirport, setDepartureAirport] = useState('MXP');
   const [durationDays, setDurationDays] = useState(7);
+  const [departureDate, setDepartureDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7); // Default to 7 days from today
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
 
   // Flow State
   const [loading, setLoading] = useState(false);
@@ -74,13 +82,44 @@ export default function TravelGraphHome() {
     "Reykjavik": "KEF",
   };
 
-  const getSkyscannerUrl = (dep: string, destName: string) => {
+  const getSkyscannerUrl = (dep: string, destName: string, departureDateStr: string, duration: number) => {
     const destCode = DEST_CODES[destName] || "HER";
-    return `https://www.skyscanner.it/trasporti/voli/${dep.toLowerCase()}/${destCode.toLowerCase()}/`;
+    
+    // Format outbound date: from YYYY-MM-DD to YYMMDD
+    const parts = departureDateStr.split('-');
+    if (parts.length !== 3) return `https://www.skyscanner.it/trasporti/voli/${dep.toLowerCase()}/${destCode.toLowerCase()}/`;
+    
+    const yy = parts[0].substring(2);
+    const mm = parts[1];
+    const dd = parts[2];
+    const outbound = `${yy}${mm}${dd}`;
+
+    // Calculate inbound date
+    const date = new Date(departureDateStr);
+    if (isNaN(date.getTime())) return `https://www.skyscanner.it/trasporti/voli/${dep.toLowerCase()}/${destCode.toLowerCase()}/`;
+    date.setDate(date.getDate() + duration);
+    const returnYy = String(date.getFullYear()).substring(2);
+    const returnMm = String(date.getMonth() + 1).padStart(2, '0');
+    const returnDd = String(date.getDate()).padStart(2, '0');
+    const inbound = `${returnYy}${returnMm}${returnDd}`;
+
+    return `https://www.skyscanner.it/trasporti/voli/${dep.toLowerCase()}/${destCode.toLowerCase()}/${outbound}/${inbound}/?outboundaltsenabled=false&inboundaltsenabled=false&preferdirects=false&ref=home`;
   };
 
-  const getBookingUrl = (destName: string) => {
-    return `https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent(destName)}`;
+  const getBookingUrl = (destName: string, departureDateStr: string, duration: number) => {
+    // Format checkout date
+    const checkin = departureDateStr;
+    const date = new Date(departureDateStr);
+    if (isNaN(date.getTime())) {
+      return `https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent(destName)}`;
+    }
+    date.setDate(date.getDate() + duration);
+    const checkoutYyyy = date.getFullYear();
+    const checkoutMm = String(date.getMonth() + 1).padStart(2, '0');
+    const checkoutDd = String(date.getDate()).padStart(2, '0');
+    const checkout = `${checkoutYyyy}-${checkoutMm}-${checkoutDd}`;
+
+    return `https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent(destName)}&checkin=${checkin}&checkout=${checkout}`;
   };
 
   // Agent Steps Definition
@@ -143,6 +182,7 @@ export default function TravelGraphHome() {
         flexibility: Number(flexibility),
         departureAirport: departureAirport.toUpperCase().trim(),
         durationDays: Number(durationDays),
+        departureDate,
       });
 
       setApiResult(finalState);
@@ -304,19 +344,19 @@ export default function TravelGraphHome() {
               </div>
 
               {/* Text Fields Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Departure Airport */}
                 <div className="space-y-2">
                   <label htmlFor="departureAirportInput" className="block text-sm font-medium text-zinc-300 flex items-center justify-between">
-                    <span>Aeroporto di Partenza</span>
+                    <span>Partenza</span>
                     {getAirportName(departureAirport) ? (
                       <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         {getAirportName(departureAirport)}
                       </span>
                     ) : departureAirport.trim().length === 3 ? (
                       <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                        Aeroporto Generico ({departureAirport})
+                        Generico ({departureAirport})
                       </span>
                     ) : null}
                   </label>
@@ -335,10 +375,26 @@ export default function TravelGraphHome() {
                   </div>
                 </div>
 
+                {/* Departure Date */}
+                <div className="space-y-2">
+                  <label htmlFor="departureDateInput" className="block text-sm font-medium text-zinc-300">
+                    Data di Partenza
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="departureDateInput"
+                      type="date"
+                      value={departureDate}
+                      onChange={(e) => setDepartureDate(e.target.value)}
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none text-zinc-200 transition-all text-sm cursor-pointer"
+                    />
+                  </div>
+                </div>
+
                 {/* Duration Days */}
                 <div className="space-y-2">
                   <label htmlFor="durationDaysInput" className="block text-sm font-medium text-zinc-300">
-                    Durata Viaggio (Notti)
+                    Durata (Notti)
                   </label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500 text-sm font-semibold">
@@ -665,10 +721,15 @@ export default function TravelGraphHome() {
                       </p>
                       {!apiResult?.userPreferences.isRoadTrip && (
                         <a
-                          href={getSkyscannerUrl(apiResult?.userPreferences.departureAirport || "MXP", selectedProposalForBooking.destination)}
+                          href={getSkyscannerUrl(
+                            apiResult?.userPreferences.departureAirport || "MXP", 
+                            selectedProposalForBooking.destination,
+                            apiResult?.userPreferences.departureDate || "",
+                            apiResult?.userPreferences.durationDays || 7
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-705 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer"
                         >
                           <Plane className="h-3.5 w-3.5" />
                           Cerca Volo su Skyscanner.it
@@ -691,7 +752,11 @@ export default function TravelGraphHome() {
                         Clicca sotto per visualizzare le camere disponibili in tempo reale per le tue date.
                       </p>
                       <a
-                        href={getBookingUrl(selectedProposalForBooking.destination)}
+                        href={getBookingUrl(
+                          selectedProposalForBooking.destination,
+                          apiResult?.userPreferences.departureDate || "",
+                          apiResult?.userPreferences.durationDays || 7
+                        )}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer"

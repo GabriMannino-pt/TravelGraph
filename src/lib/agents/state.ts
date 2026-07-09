@@ -6,6 +6,7 @@ export interface TravelGraphState {
     flexibility: number; // e.g. 0.15 for +15%
     departureAirport: string;
     durationDays: number;
+    departureDate: string;
     isBlindExploration: boolean;
     isRoadTrip: boolean;
   };
@@ -46,6 +47,7 @@ export function createInitialState(params: Partial<TravelGraphState['userPrefere
       flexibility: params.flexibility || 0.1,
       departureAirport: params.departureAirport || "MXP",
       durationDays: params.durationDays || 7,
+      departureDate: params.departureDate || "",
       isBlindExploration: params.isBlindExploration || false,
       isRoadTrip: params.isRoadTrip || false,
     },

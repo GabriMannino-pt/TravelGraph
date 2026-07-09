@@ -216,7 +216,9 @@ export async function routerParserNode(state: TravelGraphState): Promise<Partial
     input.includes("catania") || 
     input.includes("taormina") || 
     input.includes("siracusa") || 
-    input.includes("avola");
+    input.includes("avola") ||
+    input.includes("sicilia") ||
+    input.includes("sicily");
 
   const logs = [
     ...state.logs, 
@@ -272,7 +274,7 @@ export async function geoExplorerNode(state: TravelGraphState): Promise<Partial<
   } else if (!isBlind) {
     // Guided Mode (Standard Fly)
     const input = state.userPreferences.rawInput.toLowerCase();
-    let targetDest = "Creta"; // default fallback if we don't recognize it
+    let targetDest = "";
     
     // Simple entity extraction matching local keys
     if (input.includes("creta")) targetDest = "Creta";
@@ -281,6 +283,21 @@ export async function geoExplorerNode(state: TravelGraphState): Promise<Partial<
     else if (input.includes("londra")) targetDest = "Londra";
     else if (input.includes("roma")) targetDest = "Roma";
     else if (input.includes("maldive")) targetDest = "Maldive";
+    else if (input.includes("rodi")) targetDest = "Rodi";
+    else if (input.includes("maiorca")) targetDest = "Maiorca";
+    else if (input.includes("lione")) targetDest = "Lione";
+    else if (input.includes("manchester")) targetDest = "Manchester";
+    else if (input.includes("napoli")) targetDest = "Napoli";
+    else if (input.includes("zanzibar")) targetDest = "Zanzibar";
+    else if (input.includes("tenerife")) targetDest = "Tenerife";
+    else if (input.includes("reykjavik")) targetDest = "Reykjavik";
+    else if (input.includes("taormina")) targetDest = "Taormina";
+    else if (input.includes("siracusa")) targetDest = "Siracusa";
+    else if (input.includes("avola")) targetDest = "Avola";
+
+    if (!targetDest) {
+      throw new Error("Destinazione non supportata dal database. Prova ad inserire una delle mete disponibili (es. Creta, Ibiza, Parigi, Londra, Roma, Tenerife, Reykjavik) oppure prova con mete locali come 'Taormina' o 'Siracusa' per un RoadTrip.");
+    }
 
     logs.push(`[Geo Explorer] Destinazione target individuata: "${targetDest}".`);
     

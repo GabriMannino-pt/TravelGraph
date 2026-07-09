@@ -33,6 +33,55 @@ export default function TravelGraphHome() {
   const [apiResult, setApiResult] = useState<TravelGraphState | null>(null);
   const [visibleLogs, setVisibleLogs] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [selectedProposalForBooking, setSelectedProposalForBooking] = useState<any | null>(null);
+
+  const getAirportName = (code: string) => {
+    const cleanCode = code.toUpperCase().trim();
+    const mapping: Record<string, string> = {
+      "MXP": "Milano Malpensa",
+      "FCO": "Roma Fiumicino",
+      "CTA": "Catania Fontanarossa",
+      "PMO": "Palermo Falcone-Borsellino",
+      "NAP": "Napoli Capodichino",
+      "LIN": "Milano Linate",
+      "BGY": "Bergamo Orio al Serio",
+      "VCE": "Venezia Marco Polo",
+      "BLQ": "Bologna Guglielmo Marconi",
+      "TRN": "Torino Caselle",
+      "FLR": "Firenze Peretola",
+      "PSA": "Pisa San Giusto",
+      "BRI": "Bari Palese",
+      "SUF": "Lamezia Terme",
+      "CAG": "Cagliari Elmas"
+    };
+    return mapping[cleanCode] || null;
+  };
+
+  const DEST_CODES: Record<string, string> = {
+    "Creta": "HER",
+    "Rodi": "RHO",
+    "Ibiza": "IBZ",
+    "Maiorca": "PMI",
+    "Parigi": "PAR",
+    "Lione": "LYS",
+    "Londra": "LON",
+    "Manchester": "MAN",
+    "Roma": "FCO",
+    "Napoli": "NAP",
+    "Maldive": "MLE",
+    "Zanzibar": "ZNZ",
+    "Tenerife": "TFS",
+    "Reykjavik": "KEF",
+  };
+
+  const getSkyscannerUrl = (dep: string, destName: string) => {
+    const destCode = DEST_CODES[destName] || "HER";
+    return `https://www.skyscanner.it/trasporti/voli/${dep.toLowerCase()}/${destCode.toLowerCase()}/`;
+  };
+
+  const getBookingUrl = (destName: string) => {
+    return `https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent(destName)}`;
+  };
 
   // Agent Steps Definition
   const steps = [
@@ -259,8 +308,17 @@ export default function TravelGraphHome() {
                 
                 {/* Departure Airport */}
                 <div className="space-y-2">
-                  <label htmlFor="departureAirportInput" className="block text-sm font-medium text-zinc-300">
-                    Aeroporto di Partenza
+                  <label htmlFor="departureAirportInput" className="block text-sm font-medium text-zinc-300 flex items-center justify-between">
+                    <span>Aeroporto di Partenza</span>
+                    {getAirportName(departureAirport) ? (
+                      <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        {getAirportName(departureAirport)}
+                      </span>
+                    ) : departureAirport.trim().length === 3 ? (
+                      <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                        Aeroporto Generico ({departureAirport})
+                      </span>
+                    ) : null}
                   </label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500 text-sm font-semibold">
@@ -298,6 +356,22 @@ export default function TravelGraphHome() {
                   </div>
                 </div>
 
+              </div>
+
+              {/* Supported Destinations Panel */}
+              <div className="bg-zinc-950/50 border border-zinc-900 p-4 rounded-xl space-y-2 text-xs text-zinc-400">
+                <h4 className="font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Compass className="h-3.5 w-3.5 text-indigo-400 animate-spin-slow" />
+                  Destinazioni Supportate nel Database
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
+                  <div>
+                    <span className="font-semibold text-zinc-200">Volo:</span> Creta, Rodi, Ibiza, Maiorca, Parigi, Lione, Londra, Manchester, Roma, Napoli, Maldive, Zanzibar, Tenerife, Reykjavik.
+                  </div>
+                  <div>
+                    <span className="font-semibold text-zinc-200">Road Trip (Auto):</span> Sicilia (Taormina, Siracusa, Avola). Scrivi "Sicilia" o "Vicino Catania" per attivare questa modalità.
+                  </div>
+                </div>
               </div>
 
               {/* Submit Button */}
@@ -482,15 +556,24 @@ export default function TravelGraphHome() {
 
                     </div>
 
-                    {/* Why choose it block */}
-                    <div className="p-6 bg-zinc-950/60 border-t border-zinc-900 relative z-10 flex flex-col justify-end min-h-[120px]">
-                      <span className="text-indigo-400 font-bold text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
-                        <Sparkles className="h-3 w-3 text-indigo-400" />
-                        Perché sceglierlo
-                      </span>
-                      <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-                        {proposal.whyChooseIt}
-                      </p>
+                    {/* Why choose it block & Book Button */}
+                    <div className="p-6 bg-zinc-950/60 border-t border-zinc-900 relative z-10 flex flex-col justify-between min-h-[170px] gap-4">
+                      <div>
+                        <span className="text-indigo-400 font-bold text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-indigo-400" />
+                          Perché sceglierlo
+                        </span>
+                        <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                          {proposal.whyChooseIt}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedProposalForBooking(proposal)}
+                        className="w-full py-2 bg-indigo-600/10 hover:bg-indigo-600/30 border border-indigo-500/20 text-indigo-300 font-semibold rounded-lg text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        Prenota & Dettagli Reali
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
                     </div>
 
                   </article>
@@ -510,6 +593,130 @@ export default function TravelGraphHome() {
               </button>
             </div>
 
+          </div>
+        )}
+
+        {/* Booking Details Modal */}
+        {selectedProposalForBooking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl animate-scale-up">
+              
+              {/* Modal Header */}
+              <div className="bg-zinc-950 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">
+                    {getBadgeStyles(selectedProposalForBooking.cardType).text}
+                  </span>
+                  <h3 className="text-lg font-bold text-white mt-1.5">
+                    Dettagli Prenotazione Reale
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedProposalForBooking(null)}
+                  className="text-zinc-500 hover:text-white transition-colors p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-6">
+                
+                {/* Destination & Price Overview */}
+                <div className="bg-zinc-950/50 border border-zinc-900 p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-zinc-500 font-semibold block">DESTINAZIONE</span>
+                    <span className="text-lg font-bold text-white flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-zinc-400" />
+                      {selectedProposalForBooking.destination}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-zinc-500 font-semibold block">PREZZO STIMATO</span>
+                    <span className="text-2xl font-black text-emerald-400">
+                      {selectedProposalForBooking.totalPrice} €
+                    </span>
+                  </div>
+                </div>
+
+                {/* Booking Steps */}
+                <div className="space-y-4">
+                  
+                  {/* Step 1: Volo */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-bold text-zinc-300">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-400 font-mono">
+                        1
+                      </div>
+                      Prenota il Volo su Skyscanner
+                    </div>
+                    <div className="pl-8 space-y-2.5">
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        {apiResult?.userPreferences.isRoadTrip ? (
+                          <span className="text-amber-400 font-semibold block">
+                            Nessun volo aereo necessario! Raggiungi la destinazione in auto o noleggia un veicolo (i costi di carburante e pedaggi sono stimati nel prezzo finale).
+                          </span>
+                        ) : (
+                          <>
+                            Abbiamo selezionato per te l'itinerario aereo: <strong className="text-zinc-200">{selectedProposalForBooking.flightDetails}</strong>. 
+                            Clicca sotto per verificare i prezzi in tempo reale ed acquistare il volo.
+                          </>
+                        )}
+                      </p>
+                      {!apiResult?.userPreferences.isRoadTrip && (
+                        <a
+                          href={getSkyscannerUrl(apiResult?.userPreferences.departureAirport || "MXP", selectedProposalForBooking.destination)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                        >
+                          <Plane className="h-3.5 w-3.5" />
+                          Cerca Volo su Skyscanner.it
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step 2: Alloggio */}
+                  <div className="space-y-2 pt-2 border-t border-zinc-900">
+                    <div className="flex items-center gap-2 text-sm font-bold text-zinc-300">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-mono">
+                        2
+                      </div>
+                      Prenota l'Alloggio su Booking.com
+                    </div>
+                    <div className="pl-8 space-y-2.5">
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Struttura selezionata dallo storico tariffe: <strong className="text-zinc-200">{selectedProposalForBooking.hotelDetails}</strong>. 
+                        Clicca sotto per visualizzare le camere disponibili in tempo reale per le tue date.
+                      </p>
+                      <a
+                        href={getBookingUrl(selectedProposalForBooking.destination)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                      >
+                        <Hotel className="h-3.5 w-3.5" />
+                        Cerca Struttura su Booking.com
+                      </a>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-zinc-950 px-6 py-4 border-t border-zinc-800 flex justify-end">
+                <button
+                  onClick={() => setSelectedProposalForBooking(null)}
+                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer border border-zinc-800"
+                >
+                  Chiudi Dettagli
+                </button>
+              </div>
+
+            </div>
           </div>
         )}
 

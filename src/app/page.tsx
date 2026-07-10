@@ -98,8 +98,9 @@ export default function TravelGraphHome() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      alert("Errore Login: " + (error.message || String(error)));
     }
   };
 

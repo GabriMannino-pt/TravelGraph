@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { initialAgencyState } from "../../../lib/agents/agencyState";
+import { initialAgencyState } from "@/lib/agents/agencyState";
 
-import { cfoAgent } from "../../../lib/agents/c-suite/cfo";
-import { brandStrategistAgent } from "../../../lib/agents/c-suite/brand_strategist";
-import { marketResearcherAgent } from "../../../lib/agents/c-suite/market_researcher";
-import { marketingStrategistAgent } from "../../../lib/agents/c-suite/marketing_strategist";
+import { cfoAgent } from "@/lib/agents/c-suite/cfo";
+import { brandStrategistAgent } from "@/lib/agents/c-suite/brand_strategist";
+import { marketResearcherAgent } from "@/lib/agents/c-suite/market_researcher";
+import { marketingStrategistAgent } from "@/lib/agents/c-suite/marketing_strategist";
 
-import { dealHunterAgent } from "../../../lib/agents/execution/deal_hunter";
-import { viralCopywriterAgent } from "../../../lib/agents/execution/viral_copywriter";
-import { visualArtistAgent } from "../../../lib/agents/execution/visual_artist";
-import { dispatcherAgent } from "../../../lib/agents/execution/dispatcher";
+import { dealHunterAgent } from "@/lib/agents/execution/deal_hunter";
+import { viralCopywriterAgent } from "@/lib/agents/execution/viral_copywriter";
+import { visualArtistAgent } from "@/lib/agents/execution/visual_artist";
+import { dispatcherAgent } from "@/lib/agents/execution/dispatcher";
 
 // Questo endpoint sarà chiamato quotidianamente da AWS EventBridge
 export async function GET(request: Request) {

@@ -52,6 +52,48 @@ export default function TravelGraphHome() {
     return () => unsubscribe();
   }, []);
 
+  // Deep Link (TikTok Funnel)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const dest = params.get('dest');
+      const price = params.get('price');
+      const origin = params.get('origin');
+      
+      if (dest && price && origin) {
+        // Simula immediatamente il risultato per il TikTok Funnel
+        const fakeResult: TravelGraphState = {
+          rawInput: `Offerta Flash ${origin} - ${dest}`,
+          budget: Number(price) + 50,
+          flexibility: 0.1,
+          departureAirport: origin,
+          durationDays: 7,
+          departureDate: new Date().toISOString().split('T')[0],
+          isBlindExploration: false,
+          isRoadTrip: false,
+          targetDestinations: [dest],
+          finalProposals: [
+            {
+              id: 'deal-1',
+              title: `Fuga a ${dest} (Error Fare)`,
+              destination: dest,
+              totalPrice: Number(price),
+              flightDetails: `Volo diretto da ${origin} a ${dest} - Trovato dai nostri Bot.`,
+              hotelDetails: `Alloggio da definire (prenota il volo prima che sparisca!).`,
+              whyChooseIt: `🚨 TARIFFA ERRORE: L'algoritmo ha trovato questa tariffa anomala. Prenota immediatamente, le compagnie correggono questi errori in poche ore.`,
+              cardType: 'target'
+            }
+          ],
+          logs: ['[System] Deal Funnel attivato dal Deep Link.']
+        };
+        
+        setDepartureAirport(origin);
+        setApiResult(fakeResult);
+        setShowResults(true);
+      }
+    }
+  }, []);
+
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();

@@ -20,6 +20,7 @@ export async function dispatcherAgent(state: AgencyState): Promise<Partial<Agenc
                       `- 📊 *Strategist:* Focus su ${state.weeklyStrategy.focusDestination} sotto i ${state.weeklyStrategy.focusBudget}€\n\n` +
                       `✈️ *IL DEAL TROVATO:* ${state.dealFound.origin} ➔ ${state.dealFound.destination} a ${state.dealFound.price}€ (invece di ${state.dealFound.regularPrice}€)\n\n` +
                       `📝 *COPY PER TIKTOK/IG:*\n${state.viralContent.caption}\n\n` +
+                      `🔗 *LINK DA INSERIRE IN BIO:*\nhttps://main.d3lcweteuo9gs7.amplifyapp.com/?dest=${encodeURIComponent(state.dealFound.destination)}&price=${state.dealFound.price}&origin=${state.dealFound.origin}\n\n` +
                       `📷 *Immagine (Visual):* ${state.visualAssetUrl || "N/A"}`;
 
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {

@@ -264,13 +264,23 @@ export async function geoExplorerNode(state: TravelGraphState): Promise<Partial<
 export async function dataFetcherNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
   const destinations = state.discoveredDestinations;
   const departure = state.userPreferences.departureAirport;
-  const logs = [...state.logs, `[Data Fetcher] Contatto le API Live per voli da ${departure}...`];
+  const isRoadTrip = state.userPreferences.isRoadTrip || !departure || departure.trim() === "";
+  
+  const logs = [...state.logs];
+  if (isRoadTrip) {
+    logs.push(`[Data Fetcher] Modalità 'Solo Hotel / Road Trip' attivata. Nessun costo aereo calcolato.`);
+  } else {
+    logs.push(`[Data Fetcher] Contatto le API Live per voli da ${departure}...`);
+  }
   
   const rawQuotes: TravelGraphState["rawQuotes"] = [];
   let quoteIndex = 0;
 
   for (const dest of destinations) {
-    const flights = await fetchFlightsFromDb(departure, dest);
+    const flights = isRoadTrip 
+      ? [{ departure: "Mezzo Proprio", destination: dest, price: 0, details: "Viaggio autonomo (Auto/Treno)", isDirect: true }]
+      : await fetchFlightsFromDb(departure, dest);
+      
     const hotels = await fetchHotelsFromDb(dest);
 
     for (const flight of flights) {

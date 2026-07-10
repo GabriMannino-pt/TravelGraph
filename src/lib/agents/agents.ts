@@ -314,10 +314,20 @@ export async function opportunistUpgraderNode(state: TravelGraphState): Promise<
 
 export async function synthesizerNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
   const proposals: TravelGraphState["finalProposals"] = [];
-  const logs = [...state.logs, `[Synthesizer] Chiamo OpenAI per la stesura del Copy persuasivo...`];
+  const logs = [...state.logs, `[Synthesizer] Controllo ferreo del budget e filtro le opzioni...`];
 
-  // Prendiamo i 3 migliori pacchetti
-  const topQuotes = state.rawQuotes.slice(0, 3);
+  const maxBudget = state.userPreferences.budget * (1 + state.userPreferences.flexibility);
+  
+  // 1. Filtra rigorosamente le offerte che superano il budget massimo consentito
+  const validQuotes = state.rawQuotes.filter(q => (q.flightPrice + q.hotelPrice) <= maxBudget);
+  
+  // 2. Ordina per prezzo totale (dal più economico al più costoso)
+  validQuotes.sort((a, b) => (a.flightPrice + a.hotelPrice) - (b.flightPrice + b.hotelPrice));
+
+  logs.push(`[Synthesizer] Trovate ${validQuotes.length} opzioni che rispettano il budget di ${state.userPreferences.budget}€.`);
+
+  // Prendiamo i 3 migliori pacchetti validi
+  const topQuotes = validQuotes.slice(0, 3);
   
   for (const quote of topQuotes) {
     const copy = await generateAIPitch(quote.destination, quote.experienceType, quote.hotelDetails.split(',')[0], state.userPreferences.budget);
@@ -333,7 +343,21 @@ export async function synthesizerNode(state: TravelGraphState): Promise<Partial<
     });
   }
 
-  logs.push(`[Synthesizer] Copy generato da OpenAI. Pacchetti pronti per il frontend.`);
+  // Se l'AI non ha trovato nulla sotto il budget
+  if (proposals.length === 0) {
+    proposals.push({
+      cardType: 'target',
+      destination: 'Nessuna Meta',
+      title: 'Budget troppo basso',
+      flightDetails: 'Nessun volo disponibile per questo budget',
+      hotelDetails: 'Nessun alloggio trovato',
+      totalPrice: 0,
+      whyChooseIt: `Il nostro algoritmo Budget-First ha scartato tutte le opzioni perché superavano i ${maxBudget}€ (inclusa la flessibilità). Prova ad alzare il budget per sbloccare destinazioni.`
+    });
+    logs.push(`[Synthesizer] ERRORE: Nessun pacchetto ha superato il blocco del budget!`);
+  } else {
+    logs.push(`[Synthesizer] Copy generato da OpenAI. Pacchetti pronti per il frontend.`);
+  }
 
   return { finalProposals: proposals, logs };
 }

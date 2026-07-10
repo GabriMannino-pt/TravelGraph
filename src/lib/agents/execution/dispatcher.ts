@@ -14,8 +14,11 @@ export async function dispatcherAgent(state: AgencyState): Promise<Partial<Agenc
   if (botToken && chatId) {
     try {
       const message = `🚨 *NUOVA CAMPAGNA PRONTA* 🚨\n\n` +
-                      `✈️ *Rotta:* ${state.dealFound.origin} ➔ ${state.dealFound.destination}\n` +
-                      `💰 *Prezzo Scovato:* ${state.dealFound.price}€ (invece di ${state.dealFound.regularPrice}€)\n\n` +
+                      `🏛️ *REPORT C-SUITE (STRATEGIA):*\n` +
+                      `- 💰 *CFO:* Budget approvato (Target ROI: ${state.financialStatus.targetROI})\n` +
+                      `- 🎯 *Brand Strategist:* Tono "${state.brandGuidelines.toneOfVoice}"\n` +
+                      `- 📊 *Strategist:* Focus su ${state.weeklyStrategy.focusDestination} sotto i ${state.weeklyStrategy.focusBudget}€\n\n` +
+                      `✈️ *IL DEAL TROVATO:* ${state.dealFound.origin} ➔ ${state.dealFound.destination} a ${state.dealFound.price}€ (invece di ${state.dealFound.regularPrice}€)\n\n` +
                       `📝 *COPY PER TIKTOK/IG:*\n${state.viralContent.caption}\n\n` +
                       `📷 *Immagine (Visual):* ${state.visualAssetUrl || "N/A"}`;
 

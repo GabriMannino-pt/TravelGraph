@@ -4,6 +4,7 @@ import { initialAgencyState } from "@/lib/agents/agencyState";
 import { cfoAgent } from "@/lib/agents/c-suite/cfo";
 import { brandStrategistAgent } from "@/lib/agents/c-suite/brand_strategist";
 import { marketResearcherAgent } from "@/lib/agents/c-suite/market_researcher";
+import { performanceAnalystAgent } from "@/lib/agents/c-suite/performance_analyst";
 import { marketingStrategistAgent } from "@/lib/agents/c-suite/marketing_strategist";
 
 import { dealHunterAgent } from "@/lib/agents/execution/deal_hunter";
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ status: "Fermato dal CFO", logs: state.logs });
   }
 
+  state = { ...state, ...(await performanceAnalystAgent(state)) };
   state = { ...state, ...(await brandStrategistAgent(state)) };
   state = { ...state, ...(await marketResearcherAgent(state)) };
   state = { ...state, ...(await marketingStrategistAgent(state)) };

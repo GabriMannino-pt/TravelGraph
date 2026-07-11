@@ -46,17 +46,10 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
     }
   }
 
-  // Backup in caso l'API abbia esaurito il rate limit o fallisca
+  // NESSUN BACKUP FAKE. Se l'API ha fallito o non ha trovato voli validi, ci fermiamo.
   if (!dealFound) {
-    dealFound = {
-      destination: targetDest,
-      origin: "MXP",
-      price: Math.floor(Math.random() * 20) + 29.99, // Random tra 29 e 49
-      regularPrice: 200,
-      departureDate: "2026-08-25",
-      returnDate: "2026-09-02",
-      airline: "Wizz Air"
-    };
+    logs.push(`[Execution] Deal Hunter: 🛑 KILL SWITCH ATTIVATO. Nessun deal reale estratto. Sospendo la campagna giornaliera per preservare la credibilità.`);
+    return { logs };
   }
 
   if (dealFound.price <= state.weeklyStrategy.focusBudget) {

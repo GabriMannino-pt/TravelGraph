@@ -108,11 +108,6 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
     return { logs };
   }
 
-  if (dealFound.price <= state.weeklyStrategy.focusBudget) {
-    logs.push(`[Execution] Deal Hunter: 🎯 BINGO! Trovato ${dealFound.origin}-${dealFound.destination} a ${dealFound.price}€. Passo i dati al copywriter.`);
-    return { dealFound, logs };
-  } else {
-    logs.push("[Execution] Deal Hunter: Nessuna offerta sotto il budget trovata oggi.");
-    return { logs };
-  }
+  logs.push(`[Execution] Deal Hunter: 🎯 BINGO! Passo i dati al copywriter.`);
+  return { dealFound, logs };
 }

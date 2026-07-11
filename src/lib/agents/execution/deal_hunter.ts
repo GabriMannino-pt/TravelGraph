@@ -50,7 +50,7 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         const searchDate = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD
                          
         logs.push(`[Execution] Deal Hunter: Tento rotta ${route.origin} -> ${route.dest} (${destCode})...`);
-        const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=${route.origin}&destination=${destCode}&date=${searchDate}`, {
+        const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=${route.origin}&destination=${destCode}&date=${searchDate}&adults=1&currency=EUR`, {
           headers: {
             'x-rapidapi-key': RAPIDAPI_KEY,
             'x-rapidapi-host': 'flights-sky.p.rapidapi.com'

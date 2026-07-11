@@ -14,8 +14,8 @@ export async function marketingStrategistAgent(state: AgencyState): Promise<Part
   
   const focusDestinations = [...new Set([...trending, ...secondaryDestinations])].slice(0, 5);
   
-  // Aeroporti principali italiani
-  const focusOrigins = ["MXP", "FCO", "BGY", "VCE"];
+  // Aeroporti principali italiani e sud Italia
+  const focusOrigins = ["MXP", "FCO", "BGY", "VCE", "CTA", "PMO"];
   
   const focusBudget = 50; // Cerca voli sotto i 50 euro
   const campaignType = "FOMO";

@@ -29,8 +29,8 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
   // Mescoliamo le combinazioni in modo casuale per non cercare sempre prima su MXP -> Ibiza
   const shuffledCombinations = combinations.sort(() => 0.5 - Math.random());
   
-  // Prendiamo solo le prime 5 da testare
-  const combinationsToTest = shuffledCombinations.slice(0, 5);
+  // Prendiamo solo le prime 3 da testare (risparmio crediti API)
+  const combinationsToTest = shuffledCombinations.slice(0, 3);
 
   if (RAPIDAPI_KEY) {
     for (const route of combinationsToTest) {
@@ -40,6 +40,8 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
                          route.dest.toLowerCase().includes("tenerife") ? "TFS" : 
                          route.dest.toLowerCase().includes("albania") ? "TIA" : 
                          route.dest.toLowerCase().includes("creta") ? "HER" : 
+                         route.dest.toLowerCase().includes("zanzibar") ? "ZNZ" :
+                         route.dest.toLowerCase().includes("sharm") ? "SSH" :
                          route.dest.toLowerCase().includes("malta") ? "MLA" : "LHR";
         
         // Calcoliamo una data dinamica: esattamente 30 giorni da oggi

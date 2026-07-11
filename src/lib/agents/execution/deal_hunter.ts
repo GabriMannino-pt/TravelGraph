@@ -52,7 +52,7 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         throw new Error("Nessun volo trovato nel JSON");
       }
     } catch (e: any) {
-      logs.push(`[Execution] Deal Hunter: Fallimento API Live (${e.message}). Uso backup di sicurezza.`);
+      logs.push(`[Execution] Deal Hunter: Fallimento API Live (${e.message}).`);
     }
   }
 

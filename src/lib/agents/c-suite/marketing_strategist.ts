@@ -8,17 +8,25 @@ export async function marketingStrategistAgent(state: AgencyState): Promise<Part
     return { logs };
   }
 
-  // Prende i trend dal Researcher e decide il target
-  const focusDestination = state.marketTrends.trendingDestinations[0] || "Ovunque";
+  // Prende i trend dal Researcher. Se non bastano, aggiunge mete secondarie.
+  const trending = state.marketTrends.trendingDestinations || [];
+  const secondaryDestinations = ["Zanzibar", "Creta", "Albania", "Malta", "Lanzarote", "Sharm el-Sheikh"];
+  
+  const focusDestinations = [...new Set([...trending, ...secondaryDestinations])].slice(0, 5);
+  
+  // Aeroporti principali italiani
+  const focusOrigins = ["MXP", "FCO", "BGY", "VCE"];
+  
   const focusBudget = 50; // Cerca voli sotto i 50 euro
   const campaignType = "FOMO";
 
-  logs.push(`[C-Suite] Marketing Strategist: Ordine Esecutivo! Obiettivo: ${focusDestination} a meno di ${focusBudget}€. Tipo campagna: ${campaignType}.`);
+  logs.push(`[C-Suite] Marketing Strategist: Ordine Esecutivo! Obiettivo: Broad Net su ${focusDestinations.join(", ")} da ${focusOrigins.join(", ")} a meno di ${focusBudget}€.`);
 
   return {
     weeklyStrategy: {
       ...state.weeklyStrategy,
-      focusDestination,
+      focusDestinations,
+      focusOrigins,
       focusBudget,
       campaignType
     },

@@ -15,7 +15,8 @@ export interface AgencyState {
     viralAudioHooks: string[];
   };
   weeklyStrategy: {
-    focusDestination: string;
+    focusDestinations: string[];
+    focusOrigins: string[];
     focusBudget: number;
     campaignType: "FOMO" | "LUXURY" | "ADVENTURE";
   };
@@ -46,6 +47,6 @@ export const initialAgencyState: AgencyState = {
   financialStatus: { budgetRemaining: 100, targetROI: 3.0, approvedToSpend: true },
   brandGuidelines: { toneOfVoice: "Aggressivo e Urgente", targetAudience: "Giovani viaggiatori", forbiddenWords: ["forse", "costoso"] },
   marketTrends: { trendingDestinations: [], viralAudioHooks: [] },
-  weeklyStrategy: { focusDestination: "Ovunque", focusBudget: 100, campaignType: "FOMO" },
+  weeklyStrategy: { focusDestinations: ["Ovunque"], focusOrigins: ["MXP"], focusBudget: 100, campaignType: "FOMO" },
   logs: []
 };

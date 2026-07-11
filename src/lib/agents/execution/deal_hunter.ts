@@ -48,9 +48,13 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 30);
         const searchDate = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        const retDate = new Date(futureDate);
+        retDate.setDate(retDate.getDate() + 7);
+        const returnDateStr = retDate.toISOString().split('T')[0];
                          
         logs.push(`[Execution] Deal Hunter: Tento rotta ${route.origin} -> ${route.dest} (${destCode})...`);
-        const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=${route.origin}&destination=${destCode}&date=${searchDate}&adults=1&currency=EUR`, {
+        const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=${route.origin}&destination=${destCode}&date=${searchDate}&returnDate=${returnDateStr}&adults=1&currency=EUR`, {
           headers: {
             'x-rapidapi-key': RAPIDAPI_KEY,
             'x-rapidapi-host': 'flights-sky.p.rapidapi.com'
@@ -64,6 +68,9 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         
         const data = await response.json();
         
+        // Loggare la risposta per debuggare RapidAPI
+        // console.log("RapidAPI response:", data);
+        
         if (data && data.data && data.data.length > 0) {
           const price = data.data[0]?.price || 49.99;
           
@@ -74,10 +81,6 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
           const discountPercentage = Math.round(((regularPrice - price) / regularPrice) * 100);
           
           if (discountPercentage >= state.weeklyStrategy.targetDiscount) {
-            const retDate = new Date(futureDate);
-            retDate.setDate(retDate.getDate() + 7);
-            const returnDateStr = retDate.toISOString().split('T')[0];
-
             dealFound = {
               destination: route.dest,
               origin: route.origin,

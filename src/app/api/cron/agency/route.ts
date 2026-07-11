@@ -12,6 +12,8 @@ import { viralCopywriterAgent } from "@/lib/agents/execution/viral_copywriter";
 import { visualArtistAgent } from "@/lib/agents/execution/visual_artist";
 import { dispatcherAgent } from "@/lib/agents/execution/dispatcher";
 
+export const dynamic = 'force-dynamic';
+
 // Questo endpoint sarà chiamato quotidianamente da AWS EventBridge
 export async function GET(request: Request) {
   // Sicurezza: Controlla che la richiesta provenga da AWS EventBridge

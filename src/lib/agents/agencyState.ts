@@ -13,11 +13,13 @@ export interface AgencyState {
   marketTrends: {
     trendingDestinations: string[];
     viralAudioHooks: string[];
+    historicalInsights?: string[];
+    marketBaselines?: Record<string, number>;
   };
   weeklyStrategy: {
     focusDestinations: string[];
     focusOrigins: string[];
-    focusBudget: number;
+    targetDiscount: number; // Percentuale di sconto richiesta (es. 40 per 40%)
     campaignType: "FOMO" | "LUXURY" | "ADVENTURE";
   };
 
@@ -46,7 +48,7 @@ export interface AgencyState {
 export const initialAgencyState: AgencyState = {
   financialStatus: { budgetRemaining: 100, targetROI: 3.0, approvedToSpend: true },
   brandGuidelines: { toneOfVoice: "Aggressivo e Urgente", targetAudience: "Giovani viaggiatori", forbiddenWords: ["forse", "costoso"] },
-  marketTrends: { trendingDestinations: [], viralAudioHooks: [] },
-  weeklyStrategy: { focusDestinations: ["Ovunque"], focusOrigins: ["MXP"], focusBudget: 100, campaignType: "FOMO" },
+  marketTrends: { trendingDestinations: [], viralAudioHooks: [], marketBaselines: {} },
+  weeklyStrategy: { focusDestinations: ["Ovunque"], focusOrigins: ["MXP"], targetDiscount: 40, campaignType: "FOMO" },
   logs: []
 };

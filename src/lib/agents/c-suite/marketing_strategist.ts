@@ -17,17 +17,17 @@ export async function marketingStrategistAgent(state: AgencyState): Promise<Part
   // Aeroporti principali italiani e sud Italia
   const focusOrigins = ["MXP", "FCO", "BGY", "VCE", "CTA", "PMO"];
   
-  const focusBudget = 50; // Cerca voli sotto i 50 euro
+  const targetDiscount = 40; // Percentuale minima di sconto richiesta (40%)
   const campaignType = "FOMO";
 
-  logs.push(`[C-Suite] Marketing Strategist: Ordine Esecutivo! Obiettivo: Broad Net su ${focusDestinations.join(", ")} da ${focusOrigins.join(", ")} a meno di ${focusBudget}€.`);
+  logs.push(`[C-Suite] Marketing Strategist: Ordine Esecutivo! Broad Net su ${focusDestinations.join(", ")} da ${focusOrigins.join(", ")}. Sconto minimo richiesto: ${targetDiscount}%.`);
 
   return {
     weeklyStrategy: {
       ...state.weeklyStrategy,
       focusDestinations,
       focusOrigins,
-      focusBudget,
+      targetDiscount,
       campaignType
     },
     logs

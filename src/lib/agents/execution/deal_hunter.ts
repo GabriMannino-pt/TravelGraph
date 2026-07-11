@@ -67,7 +67,13 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         if (data && data.data && data.data.length > 0) {
           const price = data.data[0]?.price || 49.99;
           
-          if (price <= state.weeklyStrategy.focusBudget) {
+          // Calcolo sconto rispetto al mercato
+          const baselines = state.marketTrends.marketBaselines || {};
+          const regularPrice = baselines[route.dest] || 250; // Fallback se non censito
+          
+          const discountPercentage = Math.round(((regularPrice - price) / regularPrice) * 100);
+          
+          if (discountPercentage >= state.weeklyStrategy.targetDiscount) {
             const retDate = new Date(futureDate);
             retDate.setDate(retDate.getDate() + 7);
             const returnDateStr = retDate.toISOString().split('T')[0];
@@ -76,15 +82,15 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
               destination: route.dest,
               origin: route.origin,
               price: price,
-              regularPrice: 250,
+              regularPrice: regularPrice,
               departureDate: searchDate,
               returnDate: returnDateStr,
               airline: data.data[0]?.airline || "Low Cost Partner"
             };
-            logs.push(`[Execution] Deal Hunter: ✅ TROVATA! Rotta ${route.origin} -> ${route.dest} a ${price}€. Sospendo la ricerca a strascico.`);
+            logs.push(`[Execution] Deal Hunter: ✅ TROVATA! Rotta ${route.origin} -> ${route.dest} a ${price}€ (Invece di ${regularPrice}€). Sconto del ${discountPercentage}%. Sospendo la ricerca a strascico.`);
             break; // Usciamo dal loop, abbiamo trovato il deal!
           } else {
-             logs.push(`[Execution] Deal Hunter: ❌ Rotta scartata. Prezzo (${price}€) supera il budget di ${state.weeklyStrategy.focusBudget}€.`);
+             logs.push(`[Execution] Deal Hunter: ❌ Rotta scartata. Prezzo (${price}€) ha uno sconto del ${discountPercentage}%, inferiore al target del ${state.weeklyStrategy.targetDiscount}%.`);
           }
         } else {
           logs.push(`[Execution] Deal Hunter: ❌ Rotta fallita (Nessun volo trovato).`);

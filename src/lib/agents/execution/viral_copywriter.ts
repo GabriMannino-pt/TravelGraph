@@ -24,11 +24,17 @@ export async function viralCopywriterAgent(state: AgencyState): Promise<Partial<
   });
   */
 
+  const deal = state.dealFound;
+  const targetAudience = state.brandGuidelines.targetAudience;
+  const tone = state.brandGuidelines.toneOfVoice;
+  
+  const discount = Math.round(((deal.regularPrice - deal.price) / deal.regularPrice) * 100);
+
   // Mock della risposta per sviluppo
   const viralContent = {
-    hook: `TESTO SCHERMO: ${destination.toUpperCase()} A ${price}€ 😱`,
-    voiceover: `Tutti pensano che ${destination} costi ${regularPrice}€. Sbagliato! L'ho trovato a ${price}€. Sbrigati!`,
-    caption: `🚨 ERRORE SISTEMA: ${destination} A ${price}€! Commenta ${destination} per il link.`,
+    hook: `TESTO SCHERMO: ${deal.destination.toUpperCase()} A ${deal.price}€ INVECE DI ${deal.regularPrice}€ 😱`,
+    voiceover: `Tutti pagano ${deal.destination} ${deal.regularPrice}€. Sbagliato! Ho craccato l'algoritmo e l'ho trovato a ${deal.price}€. Sconto del ${discount}%! Sbrigati prima che lo cancellino!`,
+    caption: `🚨 ERRORE SISTEMA: ${deal.destination} a ${deal.price}€ invece di ${deal.regularPrice}€! Sconto del ${discount}%. Commenta ${deal.destination.toUpperCase()} per il link.`,
     hashtags: [`#${destination.toLowerCase()}`, "#volilowcost", "#errorfare"]
   };
 

@@ -16,8 +16,13 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
       const destCode = targetDest.toLowerCase().includes("ibiza") ? "IBZ" : 
                        targetDest.toLowerCase().includes("maldive") ? "MLE" : 
                        targetDest.toLowerCase().includes("tenerife") ? "TFS" : "LHR";
+      
+      // Calcoliamo una data dinamica: esattamente 30 giorni da oggi
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 30);
+      const searchDate = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD
                        
-      const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=MXP&destination=${destCode}&date=2026-08-25`, {
+      const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=MXP&destination=${destCode}&date=${searchDate}`, {
         headers: {
           'x-rapidapi-key': RAPIDAPI_KEY,
           'x-rapidapi-host': 'flights-sky.p.rapidapi.com'
@@ -28,13 +33,18 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
       const data = await response.json();
       
       if (data && data.data && data.data.length > 0) {
+        
+        const retDate = new Date(futureDate);
+        retDate.setDate(retDate.getDate() + 7);
+        const returnDateStr = retDate.toISOString().split('T')[0];
+
         dealFound = {
           destination: targetDest,
           origin: "MXP",
           price: data.data[0]?.price || 49.99,
           regularPrice: 250,
-          departureDate: "2026-08-25",
-          returnDate: "2026-09-02",
+          departureDate: searchDate,
+          returnDate: returnDateStr,
           airline: data.data[0]?.airline || "Low Cost Partner"
         };
         logs.push(`[Execution] Deal Hunter: API Reale interrogata con successo per ${destCode}.`);

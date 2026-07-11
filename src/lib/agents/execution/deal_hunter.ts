@@ -54,7 +54,7 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         const returnDateStr = retDate.toISOString().split('T')[0];
                          
         logs.push(`[Execution] Deal Hunter: Tento rotta ${route.origin} -> ${route.dest} (${destCode})...`);
-        const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?origin=${route.origin}&destination=${destCode}&date=${searchDate}&returnDate=${returnDateStr}&adults=1&currency=EUR`, {
+        const response = await fetch(`https://flights-sky.p.rapidapi.com/flights/search-roundtrip?fromEntityId=${route.origin}&toEntityId=${destCode}&departDate=${searchDate}&returnDate=${returnDateStr}&adults=1&currency=EUR`, {
           headers: {
             'x-rapidapi-key': RAPIDAPI_KEY,
             'x-rapidapi-host': 'flights-sky.p.rapidapi.com'
@@ -68,11 +68,8 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         
         const data = await response.json();
         
-        // Loggare la risposta per debuggare RapidAPI
-        // console.log("RapidAPI response:", data);
-        
-        if (data && data.data && data.data.length > 0) {
-          const price = data.data[0]?.price || 49.99;
+        if (data && data.data && data.data.itineraries && data.data.itineraries.length > 0) {
+          const price = data.data.itineraries[0]?.price?.raw || 49.99;
           
           // Calcolo sconto rispetto al mercato
           const baselines = state.marketTrends.marketBaselines || {};
@@ -88,7 +85,7 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
               regularPrice: regularPrice,
               departureDate: searchDate,
               returnDate: returnDateStr,
-              airline: data.data[0]?.airline || "Low Cost Partner"
+              airline: data.data.itineraries[0]?.airline || "Low Cost Partner"
             };
             logs.push(`[Execution] Deal Hunter: ✅ TROVATA! Rotta ${route.origin} -> ${route.dest} a ${price}€ (Invece di ${regularPrice}€). Sconto del ${discountPercentage}%. Sospendo la ricerca a strascico.`);
             break; // Usciamo dal loop, abbiamo trovato il deal!

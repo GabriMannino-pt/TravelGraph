@@ -29,8 +29,8 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
   // Mescoliamo le combinazioni in modo casuale per non cercare sempre prima su MXP -> Ibiza
   const shuffledCombinations = combinations.sort(() => 0.5 - Math.random());
   
-  // Prendiamo solo le prime 3 da testare (risparmio crediti API)
-  const combinationsToTest = shuffledCombinations.slice(0, 3);
+  // Prendiamo solo la prima rotta da testare per preservare al massimo i crediti API (Max 1 chiamata al giorno = 30/mese)
+  const combinationsToTest = shuffledCombinations.slice(0, 1);
 
   if (RAPIDAPI_KEY) {
     for (const route of combinationsToTest) {

@@ -62,7 +62,8 @@ export async function dealHunterAgent(state: AgencyState): Promise<Partial<Agenc
         });
 
         if (!response.ok) {
-           logs.push(`[Execution] Deal Hunter: ❌ Rotta fallita (API Error).`);
+           const errText = await response.text();
+           logs.push(`[Execution] Deal Hunter: ❌ Rotta fallita (API Error ${response.status}: ${errText.substring(0, 50)}...).`);
            continue; // Prova la prossima
         }
         

@@ -63,15 +63,19 @@ export default function TravelGraphHome() {
       if (dest && price && origin) {
         // Simula immediatamente il risultato per il TikTok Funnel
         const fakeResult: TravelGraphState = {
-          rawInput: `Offerta Flash ${origin} - ${dest}`,
-          budget: Number(price) + 50,
-          flexibility: 0.1,
-          departureAirport: origin,
-          durationDays: 7,
-          departureDate: new Date().toISOString().split('T')[0],
-          isBlindExploration: false,
-          isRoadTrip: false,
-          targetDestinations: [dest],
+          userPreferences: {
+            rawInput: `Offerta Flash ${origin} - ${dest}`,
+            budget: Number(price) + 50,
+            flexibility: 0.1,
+            departureAirport: origin,
+            durationDays: 7,
+            departureDate: new Date().toISOString().split('T')[0],
+            isBlindExploration: false,
+            isRoadTrip: false,
+            mood: 'relax'
+          },
+          discoveredDestinations: [dest],
+          rawQuotes: [],
           finalProposals: [
             {
               id: 'deal-1',

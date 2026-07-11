@@ -8,11 +8,13 @@ export async function marketingStrategistAgent(state: AgencyState): Promise<Part
     return { logs };
   }
 
-  // Prende i trend dal Researcher. Se non bastano, aggiunge mete secondarie.
   const trending = state.marketTrends.trendingDestinations || [];
   const secondaryDestinations = ["Zanzibar", "Creta", "Albania", "Malta", "Lanzarote", "Sharm el-Sheikh"];
   
-  const focusDestinations = [...new Set([...trending, ...secondaryDestinations])].slice(0, 5);
+  // Uniamo tutte le mete e le mescoliamo per far girare anche Malta, Creta ecc. prima di tagliarle a 5
+  const allDestinations = [...new Set([...trending, ...secondaryDestinations])];
+  const shuffledDestinations = allDestinations.sort(() => 0.5 - Math.random());
+  const focusDestinations = shuffledDestinations.slice(0, 5);
   
   // Aeroporti principali italiani e sud Italia
   const focusOrigins = ["MXP", "FCO", "BGY", "VCE", "CTA", "PMO"];

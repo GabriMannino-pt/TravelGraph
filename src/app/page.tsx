@@ -18,13 +18,19 @@ import {
   Maximize2,
   Lock,
   Mail,
-  Crown
+  Crown,
+  Share2,
+  Flame,
+  Check,
+  Send
 } from 'lucide-react';
 import { TravelGraphState } from '@/lib/agents/state';
 import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { generateViralShareText, copyToClipboard } from '@/lib/share';
+import { subscribeToNewsletter } from '@/lib/newsletter';
 
 export default function TravelGraphHome() {
   // Auth State
@@ -159,6 +165,34 @@ export default function TravelGraphHome() {
   const [showResults, setShowResults] = useState(false);
   const [selectedProposalForBooking, setSelectedProposalForBooking] = useState<any | null>(null);
 
+  // Newsletter & Viral Share State
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<{ loading: boolean; msg: string; success?: boolean }>({ loading: false, msg: '' });
+  const [sharedIndex, setSharedIndex] = useState<number | null>(null);
+
+  const handleShareProposal = async (proposal: any, idx: number) => {
+    const text = generateViralShareText({
+      destination: proposal.destination,
+      totalPrice: proposal.totalPrice,
+      departureAirport,
+      durationDays
+    });
+    const copied = await copyToClipboard(text);
+    if (copied) {
+      setSharedIndex(idx);
+      setTimeout(() => setSharedIndex(null), 2500);
+    }
+  };
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail) return;
+    setNewsletterStatus({ loading: true, msg: 'Iscrizione in corso...' });
+    const res = await subscribeToNewsletter(newsletterEmail);
+    setNewsletterStatus({ loading: false, msg: res.message, success: res.success });
+    if (res.success) setNewsletterEmail('');
+  };
+
   // Affiliate IDs placeholders (Da personalizzare)
   const AFFILIATE_SKYSCANNER = "TUO_ID_SKYSCANNER"; 
   const AFFILIATE_BOOKING = "TUO_ID_BOOKING"; 
@@ -252,8 +286,8 @@ export default function TravelGraphHome() {
     { name: 'ROUTER_PARSER', desc: "Analisi dell'input e classificazione dell'esplorazione..." },
     { name: 'GEO_EXPLORER', desc: 'Ricerca delle mete target e delle alternative look-alike...' },
     { name: 'DATA_FETCHER', desc: 'Recupero tariffe voli e hotel (Cache + API Live)...' },
-    { name: 'OPPORTUNIST_UPGRADER', desc: "Calcolo opportunità e punteggi dell'agente Opportunista..." },
-    { name: 'SYNTHESIZER', desc: 'Assemblaggio finale delle proposte pacchettizzate...' },
+    { name: 'ITINERARY_ARCHITECT', desc: 'Creazione itinerario personalizzato e trucchi di budget...' },
+    { name: 'BOOKING_AGENT', desc: 'Generazione link affiliati e assemblaggio finale...' },
   ];
 
   // Simulation timer for multi-agent visual transitions
@@ -429,8 +463,24 @@ export default function TravelGraphHome() {
 
         {/* 1. INPUT FORM SCREEN - MAD LIBS STYLE */}
         {!loading && !showResults && (
-          <div className="max-w-4xl mx-auto w-full animate-fade-in mt-4">
+          <div className="max-w-4xl mx-auto w-full animate-fade-in mt-4 space-y-6">
             
+            {/* FLOATING LIVE DEAL TICKER (FOMO) */}
+            <div className="flex items-center justify-center gap-3 overflow-x-auto py-2 no-scrollbar">
+              <span className="text-xs font-bold text-amber-400 flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full whitespace-nowrap">
+                <Flame className="h-3.5 w-3.5 animate-pulse" /> LIVE DEALS
+              </span>
+              <div className="flex items-center gap-2 text-xs font-medium text-zinc-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full whitespace-nowrap hover:border-indigo-500/50 transition-colors cursor-pointer" onClick={() => { setDepartureAirport('MXP'); setRawInput('Maldive'); setBudget(50); }}>
+                🔥 MXP ➔ Maldive <span className="text-emerald-400 font-bold">48€ A/R</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium text-zinc-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full whitespace-nowrap hover:border-indigo-500/50 transition-colors cursor-pointer" onClick={() => { setDepartureAirport('CTA'); setRawInput('Sicilia Mare'); setBudget(400); }}>
+                🏝️ CTA ➔ Sicilia 6 Notti <span className="text-emerald-400 font-bold">400€ a coppia</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium text-zinc-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full whitespace-nowrap hover:border-indigo-500/50 transition-colors cursor-pointer" onClick={() => { setDepartureAirport('FCO'); setRawInput('Ibiza'); setBudget(120); }}>
+                ⚡ FCO ➔ Ibiza <span className="text-emerald-400 font-bold">39€ A/R</span>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-10 bg-zinc-900/30 p-8 sm:p-12 md:p-16 rounded-[2.5rem] backdrop-blur-2xl border border-white/5 shadow-2xl relative">
               
               {/* MAD LIBS UI */}
@@ -644,11 +694,30 @@ export default function TravelGraphHome() {
 
                     <div className="p-8 space-y-6 relative z-10">
                       
-                      {/* Badge and Destination */}
+                      {/* Badge and Destination & Share Button */}
                       <div className="flex items-center justify-between">
                         <span className={`px-3 py-1.5 text-xs font-bold rounded-full tracking-wider uppercase ${badge.classes}`}>
                           {badge.text}
                         </span>
+                        
+                        {/* VIRAL SHARE BUTTON */}
+                        <button
+                          onClick={() => handleShareProposal(proposal, index)}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-full text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer"
+                          title="Condividi con amici via WhatsApp"
+                        >
+                          {sharedIndex === index ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                              <span className="text-emerald-400 font-bold">Copiato!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Share2 className="h-3.5 w-3.5 text-indigo-400" />
+                              <span>Condividi</span>
+                            </>
+                          )}
+                        </button>
                       </div>
 
                       {/* Title & Dest */}
@@ -796,6 +865,24 @@ export default function TravelGraphHome() {
                   </div>
                 </div>
 
+                {/* ITINERARIO & BUDGET HACK (Generati dall'Itinerary Architect) */}
+                {selectedProposalForBooking.dailyItinerary && (
+                  <div className="bg-indigo-950/20 border border-indigo-500/20 p-5 rounded-2xl space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-bold text-indigo-400">
+                      <Sparkles className="h-4 w-4" />
+                      Itinerario su Misura dell'AI
+                    </div>
+                    <pre className="text-xs text-zinc-300 font-sans whitespace-pre-wrap leading-relaxed">
+                      {selectedProposalForBooking.dailyItinerary}
+                    </pre>
+                    {selectedProposalForBooking.budgetHackNotice && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-xs text-amber-300 font-medium">
+                        {selectedProposalForBooking.budgetHackNotice}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Booking Steps */}
                 <div className="space-y-6">
                   
@@ -897,6 +984,42 @@ export default function TravelGraphHome() {
             </div>
           </div>
         )}
+
+        {/* LEAD GENERATION SECTION: SECRET DEAL RADAR */}
+        <section className="mt-20 max-w-4xl mx-auto w-full bg-gradient-to-r from-indigo-900/30 via-zinc-900 to-purple-900/30 border border-white/10 rounded-[2.5rem] p-8 sm:p-12 text-center backdrop-blur-2xl shadow-2xl space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-xs font-bold text-indigo-400">
+            <Flame className="h-3.5 w-3.5" /> Secret Deal Radar
+          </div>
+          <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Non perdere la prossima Tariffa Errore.
+          </h3>
+          <p className="text-zinc-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            Le offerte assurde (es. Maldive a 48€) durano solo poche ore prima che le compagnie se ne accorgano. Iscriviti per ricevere un avviso istantaneo via email.
+          </p>
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <input
+              type="email"
+              required
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              placeholder="Inserisci la tua email..."
+              className="flex-1 px-5 py-3.5 bg-zinc-950/80 border border-white/10 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-white text-sm"
+            />
+            <button
+              type="submit"
+              disabled={newsletterStatus.loading}
+              className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl text-sm transition-all shadow-lg shadow-indigo-600/30 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {newsletterStatus.loading ? 'Salvataggio...' : 'Attiva Radar'}
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+          {newsletterStatus.msg && (
+            <p className={`text-xs font-semibold ${newsletterStatus.success ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {newsletterStatus.msg}
+            </p>
+          )}
+        </section>
 
       </main>
 

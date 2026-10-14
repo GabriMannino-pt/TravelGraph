@@ -215,6 +215,69 @@ async function generateAIPitch(destination: string, type: string, hotelName: str
 }
 
 // ==========================================
+// AI ITINERARY GENERATOR
+// ==========================================
+
+export async function generateAIItinerary(
+  destination: string,
+  mood: string,
+  durationDays: number,
+  budget: number
+): Promise<{ itinerary: string; budgetHack: string }> {
+  if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY === "mock-key") {
+    return {
+      itinerary: `📅 ITINERARIO SU MISURA (${durationDays} NOTTI A ${destination.toUpperCase()})\n\n` +
+        `• Giorno 1: Arrivo a ${destination}, check-in e primo assaggio della cucina locale.\n` +
+        `• Giorno 2-3: Relax sulle spiagge principali / tour culturale del centro.\n` +
+        `• Giorno 4-${Math.max(4, durationDays - 1)}: Escursione in riserve naturali ed esperienze autentiche fuori dai circuiti turisti.\n` +
+        `• Giorno ${durationDays}: Ultima colazione panoramica e rientro.`,
+      budgetHack: `💡 Trucco TravelGraph: Per rientrare nei ${budget}€, alloggia a 10-15 minuti dal centro/spiagge (es. entroterra). I prezzi scendono del 40%!`,
+    };
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Sei l'Itinerary Architect di TravelGraph. Crea un itinerario breve e accattivante giorno per giorno (max 4 punti elenco) ed estrapola un 'Trucco di Risparmio' (Budget Hack) specifico per la meta e il budget."
+        },
+        {
+          role: "user",
+          content: `Meta: ${destination}, Durata: ${durationDays} giorni, Mood: ${mood}, Budget: ${budget}€.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 300,
+    });
+
+    const text = response.choices[0].message.content || "";
+    return {
+      itinerary: text,
+      budgetHack: `💡 Trucco TravelGraph: Cerca alloggi a 10-15 minuti di auto dai punti nevralgici di ${destination} per abbattere i costi di pernottamento.`
+    };
+  } catch (error) {
+    console.error("Errore OpenAI Itinerary Generator:", error);
+    return {
+      itinerary: `Itinerario strategico per ${destination} di ${durationDays} giorni pronto per il tuo viaggio.`,
+      budgetHack: `💡 Trucco TravelGraph: Prenota alloggi fuori dal centro storico per risparmiare fino al 40%.`
+    };
+  }
+}
+
+function buildAffiliateLinks(destination: string, departureAirport: string) {
+  const affiliateBooking = process.env.NEXT_PUBLIC_AFFILIATE_BOOKING || "TRAVELGRAPH_BOOKING";
+  const affiliateSkyscanner = process.env.NEXT_PUBLIC_AFFILIATE_SKYSCANNER || "TRAVELGRAPH_SKYSCANNER";
+
+  return {
+    hotelUrl: `https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent(destination)}&aid=${affiliateBooking}`,
+    flightUrl: `https://www.skyscanner.it/trasporti/voli/${departureAirport.toLowerCase()}/?associateid=${affiliateSkyscanner}`,
+    activityUrl: `https://www.getyourguide.it/s/?q=${encodeURIComponent(destination)}`
+  };
+}
+
+// ==========================================
 // GRAPH NODES (AGENTS)
 // ==========================================
 
@@ -236,7 +299,6 @@ export async function routerParserNode(state: TravelGraphState): Promise<Partial
 
 export async function geoExplorerNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
   const isBlind = state.userPreferences.isBlindExploration;
-  const isRoad = state.userPreferences.isRoadTrip;
   const logs = [...state.logs];
   let discovered: string[] = [];
 
@@ -244,9 +306,7 @@ export async function geoExplorerNode(state: TravelGraphState): Promise<Partial<
     discovered = ["Tenerife", "Parigi", "Reykjavik"];
     logs.push(`[Geo Explorer] Scelte mete CIECHE: Tenerife, Parigi, Reykjavik.`);
   } else {
-    // GUIDED (Mock base con estrazione euristica dal rawInput)
     const rawWords = state.userPreferences.rawInput.split(' ').filter(w => w.length > 3);
-    // Prendiamo l'ultima parola inserita come guess per la destinazione
     let target = "Parigi";
     if (rawWords.length > 0) {
       target = rawWords[rawWords.length - 1];
@@ -307,41 +367,33 @@ export async function dataFetcherNode(state: TravelGraphState): Promise<Partial<
   return { rawQuotes, logs };
 }
 
-export async function opportunistUpgraderNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
-  const budget = state.userPreferences.budget;
-  const logs = [...state.logs, `[Agent Opportunista] Ricerca sconti VIP...`];
-  
-  const upgradeQuote = state.rawQuotes.find(q => (q.flightPrice + q.hotelPrice) > budget && (q.flightPrice + q.hotelPrice) <= budget * 1.2);
-  
-  if (upgradeQuote) {
-    const updatedQuotes = state.rawQuotes.map(q => q.id === upgradeQuote.id ? { ...q, isSelectedUpgrade: true } : q);
-    logs.push(`[Agent Opportunista] Upgrade Live trovato per ${upgradeQuote.destination}`);
-    return { rawQuotes: updatedQuotes, logs };
-  }
-
+export async function itineraryArchitectNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
+  const logs = [...state.logs, `[Itinerary Architect] Progettazione itinerario personalizzato e trucchi di budget...`];
   return { logs };
 }
 
-export async function synthesizerNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
+export async function bookingAgentNode(state: TravelGraphState): Promise<Partial<TravelGraphState>> {
   const proposals: TravelGraphState["finalProposals"] = [];
-  const logs = [...state.logs, `[Synthesizer] Controllo ferreo del budget e filtro le opzioni...`];
+  const logs = [...state.logs, `[Booking Agent] Controllo ferreo del budget e generazione link affiliati...`];
 
   const maxBudget = state.userPreferences.budget * (1 + state.userPreferences.flexibility);
-  
-  // 1. Filtra rigorosamente le offerte che superano il budget massimo consentito
   const validQuotes = state.rawQuotes.filter(q => (q.flightPrice + q.hotelPrice) <= maxBudget);
-  
-  // 2. Ordina per prezzo totale (dal più economico al più costoso)
   validQuotes.sort((a, b) => (a.flightPrice + a.hotelPrice) - (b.flightPrice + b.hotelPrice));
 
-  logs.push(`[Synthesizer] Trovate ${validQuotes.length} opzioni che rispettano il budget di ${state.userPreferences.budget}€.`);
+  logs.push(`[Booking Agent] Trovate ${validQuotes.length} opzioni che rispettano il budget di ${state.userPreferences.budget}€.`);
 
-  // Prendiamo i 3 migliori pacchetti validi
   const topQuotes = validQuotes.slice(0, 3);
   
   for (const quote of topQuotes) {
     const copy = await generateAIPitch(quote.destination, quote.experienceType, quote.hotelDetails.split(',')[0], state.userPreferences.budget);
-    
+    const { itinerary, budgetHack } = await generateAIItinerary(
+      quote.destination,
+      quote.experienceType,
+      state.userPreferences.durationDays,
+      state.userPreferences.budget
+    );
+    const links = buildAffiliateLinks(quote.destination, state.userPreferences.departureAirport);
+
     proposals.push({
       cardType: quote.experienceType === 'relax' ? 'relax' : 'smart',
       destination: quote.destination,
@@ -349,11 +401,13 @@ export async function synthesizerNode(state: TravelGraphState): Promise<Partial<
       flightDetails: quote.flightDetails,
       hotelDetails: `${quote.hotelDetails} (${quote.hotelStars}★) - €${quote.hotelPrice}`,
       totalPrice: quote.flightPrice + quote.hotelPrice,
-      whyChooseIt: copy
+      whyChooseIt: copy,
+      dailyItinerary: itinerary,
+      budgetHackNotice: budgetHack,
+      bookingLinks: links
     });
   }
 
-  // Se l'AI non ha trovato nulla sotto il budget
   if (proposals.length === 0) {
     proposals.push({
       cardType: 'target',
@@ -364,10 +418,11 @@ export async function synthesizerNode(state: TravelGraphState): Promise<Partial<
       totalPrice: 0,
       whyChooseIt: `Il nostro algoritmo Budget-First ha scartato tutte le opzioni perché superavano i ${maxBudget}€ (inclusa la flessibilità). Prova ad alzare il budget per sbloccare destinazioni.`
     });
-    logs.push(`[Synthesizer] ERRORE: Nessun pacchetto ha superato il blocco del budget!`);
+    logs.push(`[Booking Agent] ERRORE: Nessun pacchetto ha superato il blocco del budget!`);
   } else {
-    logs.push(`[Synthesizer] Copy generato da OpenAI. Pacchetti pronti per il frontend.`);
+    logs.push(`[Booking Agent] Itinerari e link affiliazione generati con successo.`);
   }
 
   return { finalProposals: proposals, logs };
 }
+

@@ -3,8 +3,8 @@ import {
   routerParserNode, 
   geoExplorerNode, 
   dataFetcherNode, 
-  opportunistUpgraderNode, 
-  synthesizerNode 
+  itineraryArchitectNode, 
+  bookingAgentNode 
 } from "./agents";
 
 /**
@@ -32,12 +32,12 @@ export async function runTravelGraph(
     const stateUpdate3 = await dataFetcherNode(state);
     state = { ...state, ...stateUpdate3 };
 
-    // 4. OPPORTUNIST_UPGRADER
-    const stateUpdate4 = await opportunistUpgraderNode(state);
+    // 4. ITINERARY_ARCHITECT
+    const stateUpdate4 = await itineraryArchitectNode(state);
     state = { ...state, ...stateUpdate4 };
 
-    // 5. SYNTHESIZER
-    const stateUpdate5 = await synthesizerNode(state);
+    // 5. BOOKING_AGENT
+    const stateUpdate5 = await bookingAgentNode(state);
     state = { ...state, ...stateUpdate5 };
 
     state.logs.push("[Grafo Multi-Agente] Organizzazione conclusa con successo!");

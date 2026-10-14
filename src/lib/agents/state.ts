@@ -34,6 +34,13 @@ export interface TravelGraphState {
     hotelDetails: string;
     totalPrice: number;
     whyChooseIt: string;
+    dailyItinerary?: string;
+    budgetHackNotice?: string;
+    bookingLinks?: {
+      flightUrl?: string;
+      hotelUrl?: string;
+      activityUrl?: string;
+    };
   }[];
   logs: string[];
 }

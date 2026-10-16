@@ -1,0 +1,30 @@
+name: TravelGraph Multi-Agent CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Multi-Agent Contract Tests
+        run: node --test tests/state_orchestration.test.mjs
+
+      - name: TypeScript Strict Typecheck
+        run: npx tsc --noEmit
